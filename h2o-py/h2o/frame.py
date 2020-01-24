@@ -2633,8 +2633,14 @@ class H2OFrame(Keyed):
             if frame.ncol != self.ncol:
                 raise H2OValueError("Cannot row-bind a dataframe with %d columns to a data frame with %d columns: "
                                     "the columns must match" % (frame.ncol, self.ncol))
-            if frame.columns != self.columns or frame.types != self.types:
-                raise H2OValueError("Column names and types must match for rbind() to work")
+            if frame.columns != self.columns:
+                raise H2OValueError("Column names must match for rbind() to work")
+            if frame.types != self.types:
+                validTypes = [u'float', u'real', u'double', u'int', u'long', u'numeric']
+                for eachKey in frame.types.keys():
+                    if not(frame.types[eachKey] in validTypes) or not(self.types[eachKey] in validTypes):
+                        raise H2OValueError("Column types must match for rbind() to work.  First column type {0}.  "
+                                            "Second column type {1})".format(self.types[eachKey], frame.types[eachKey]))
         fr = H2OFrame._expr(expr=ExprNode("rbind", self, *frames), cache=self._ex._cache)
         fr._ex._cache.nrows = self.nrow + sum(frame.nrow for frame in frames)
         return fr
