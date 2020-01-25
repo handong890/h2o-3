@@ -33,7 +33,7 @@ public class XGBoostCancelTest extends TestUtil {
             parms._response_column = response;
             parms._seed = 42;
 
-            for (int i = 0; i < 2; i++) { // do this 10 times to increase probability of reproduction
+            for (int i = 0; i < 10; i++) { // do this 10 times to increase probability of reproduction
                 Job<XGBoostModel> job = new hex.tree.xgboost.XGBoost(parms).trainModel();
                 int sleepTime = (int) (1000 * (2 + 5 * Math.random()));
                 System.out.println("Going to sleep for " + (sleepTime / 1000) + "sec.");
