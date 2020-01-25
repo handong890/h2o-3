@@ -41,7 +41,7 @@ public class XGBoostCancelTest extends TestUtil  {
                 job.stop(); // on single node this always passes, on multi node this used to crash the cluster
                 XGBoostModel model = job.get();
                 if (model != null) {
-                    Scope.track_generic(model);
+                    model.delete();
                 }
             }
         } finally {
