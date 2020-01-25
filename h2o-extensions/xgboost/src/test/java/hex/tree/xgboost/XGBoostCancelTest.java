@@ -6,7 +6,7 @@ import org.junit.Test;
 import water.*;
 import water.fvec.Frame;
 
-public class XGBoostCancelTest extends TestUtil  {
+public class XGBoostCancelTest extends TestUtil {
 
     @BeforeClass
     public static void stall() {
@@ -33,15 +33,19 @@ public class XGBoostCancelTest extends TestUtil  {
             parms._response_column = response;
             parms._seed = 42;
 
-            for (int i = 0; i < 10; i++) { // do this 10 times to increase probability of reproduction
+            for (int i = 0; i < 2; i++) { // do this 10 times to increase probability of reproduction
                 Job<XGBoostModel> job = new hex.tree.xgboost.XGBoost(parms).trainModel();
                 int sleepTime = (int) (1000 * (2 + 5 * Math.random()));
                 System.out.println("Going to sleep for " + (sleepTime / 1000) + "sec.");
                 Thread.sleep(sleepTime); // sleep a random number of time
                 job.stop(); // on single node this always passes, on multi node this used to crash the cluster
-                XGBoostModel model = job.get();
-                if (model != null) {
-                    model.delete();
+                try {
+                    job.get();
+                } catch (Job.JobCancelledException e) {
+                    // expected
+                }
+                if (job._result != null) {
+                    ((XGBoostModel) DKV.get(job._result).get()).remove();
                 }
             }
         } finally {
