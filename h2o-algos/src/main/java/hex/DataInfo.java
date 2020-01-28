@@ -377,6 +377,29 @@ public class DataInfo extends Keyed<DataInfo> {
     }
     return beta;
   }
+  
+  public double[] denormalizeBeta(double [] beta, boolean standardize){
+    int N = fullN()+1;
+    assert (beta.length % N) == 0:"beta len = " + beta.length + " expected multiple of" + N;
+    int nclasses = beta.length/N;
+    beta = MemoryManager.arrayCopyOf(beta,beta.length);
+    if ((standardize == true && _predictor_transform == DataInfo.TransformType.STANDARDIZE) || 
+            (standardize == false && _predictor_transform == DataInfo.TransformType.NONE)) {
+      for(int c = 0; c < nclasses; ++c) {
+        int off = N*c;
+        double norm = 0.0;        // Reverse any normalization on the intercept
+        // denormalize only the numeric coefs (categoricals are not normalized)
+        final int numoff = numStart();
+        for (int i = numoff; i < N-1; i++) {
+          double b = beta[off + i] * _normMul[i - numoff];
+          norm += b * _normSub[i - numoff]; // Also accumulate the intercept adjustment
+          beta[off + i] = b;
+        }
+        beta[off + N - 1] -= norm;
+      }
+    }
+    return beta;
+  } 
 
   private int [] _fullCatOffsets;
   private int [][] _catMap;
@@ -603,6 +626,7 @@ public class DataInfo extends Keyed<DataInfo> {
       boolean isIWV = v instanceof InteractionWrappedVec;
       switch (t) {
         case STANDARDIZE:
+        case NONE:  
           if( isIWV ) {
             InteractionWrappedVec iwv = (InteractionWrappedVec)v;
             for(int offset=0;offset<iwv.expandedLength();++offset) {
@@ -646,14 +670,9 @@ public class DataInfo extends Keyed<DataInfo> {
   }
   public void setPredictorTransform(TransformType t){
     _predictor_transform = t;
-    if(t == TransformType.NONE) {
-      _normMul = null;
-      _normSub = null;
-    } else {
-      _normMul = MemoryManager.malloc8d(numNums());
-      _normSub = MemoryManager.malloc8d(numNums());
-      setTransform(t,_normMul,_normSub,_cats,_nums);
-    }
+    _normMul = MemoryManager.malloc8d(numNums());
+    _normSub = MemoryManager.malloc8d(numNums());
+    setTransform(t,_normMul,_normSub,_cats,_nums);
   }
 
   public void setResponseTransform(TransformType t){

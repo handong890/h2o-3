@@ -213,18 +213,16 @@ public class GLMModelV3 extends ModelSchemaV3<GLMModel, GLMModelV3, GLMModel.GLM
         colnames = new String[]{"Coefficients","Std. Error","z value","p value"};
       }
       int stdOff = colnames.length;
-      if(impl.isStandardized()) {
-        colTypes = ArrayUtils.append(colTypes,"double");
-        colFormats = ArrayUtils.append(colFormats,"%5f");
-        colnames = ArrayUtils.append(colnames,"Standardized Coefficients");
-      }
+      colTypes = ArrayUtils.append(colTypes,"double");
+      colFormats = ArrayUtils.append(colFormats,"%5f");
+      colnames = ArrayUtils.append(colnames,"Standardized Coefficients");
       TwoDimTable tdt = new TwoDimTable("Coefficients","glm coefficients", ns, colnames, colTypes, colFormats, "names");
       tdt.set(0, 0, beta[beta.length - 1]);
       for (int i = 0; i < beta.length - 1; ++i) {
         tdt.set(i + 1, 0, beta[i]);
       }
       double[] norm_beta = null;
-      if(impl.isStandardized() &&impl.beta() != null) {
+      if(impl.beta() != null) {
         norm_beta = impl.getNormBeta();
         tdt.set(0, stdOff, norm_beta[norm_beta.length - 1]);
         for (int i = 0; i < norm_beta.length - 1; ++i)
@@ -244,7 +242,7 @@ public class GLMModelV3 extends ModelSchemaV3<GLMModel, GLMModelV3, GLMModel.GLM
         }
       }
       coefficients_table.fillFromImpl(tdt);
-      if(impl.isStandardized() && impl.beta() != null) {
+      if(impl.beta() != null) {
         magnitudes = norm_beta.clone();
         for (int i = 0; i < magnitudes.length; ++i)
           if (magnitudes[i] < 0) magnitudes[i] *= -1;
